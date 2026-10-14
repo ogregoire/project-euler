@@ -55,6 +55,8 @@ public class ProblemFactoryTest {
 
   @Test
   public void getClaudeProblemIsEmptyWithoutSolution() {
+    var factory = new ProblemFactory(List.of(new ThrowingProblem(1, new Error())), List.of());
+
     assertFalse(factory.getClaudeProblem(1).isPresent());
   }
 

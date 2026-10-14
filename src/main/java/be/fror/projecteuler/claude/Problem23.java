@@ -25,7 +25,8 @@ public class Problem23 extends AbstractProblem {
 
   @Override
   public Object solve() {
-    // Sum of proper divisors of every number, sieve-style: each i is a proper divisor of its multiples.
+    // Sum of proper divisors of every number, sieve-style: each i is a proper divisor of its
+    // multiples.
     var divisorSums = new int[LIMIT + 1];
     for (var i = 1; i <= LIMIT / 2; i++) {
       for (var multiple = i + i; multiple <= LIMIT; multiple += i) {

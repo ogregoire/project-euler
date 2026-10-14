@@ -26,11 +26,20 @@ public class Problem48 extends AbstractProblem {
     long result = 1;
     while (exp > 0) {
       if ((exp & 1) == 1) {
-        result = (result * base) % mod;
+        result = mulMod(result, base, mod);
       }
-      base = (base * base) % mod;
+      base = mulMod(base, base, mod);
       exp >>= 1;
     }
     return result;
+  }
+
+  /**
+   * Returns {@code a * b % mod} for {@code a, b < mod < 2^41}. The full product can need over 64
+   * bits, so {@code b} is split at bit 20 into two parts whose products with {@code a} still fit.
+   */
+  long mulMod(long a, long b, long mod) {
+    long high = a * (b >>> 20) % mod;
+    return ((high << 20) + a * (b & 0xF_FFFF)) % mod;
   }
 }
