@@ -31,11 +31,14 @@ public class Problem5 extends AbstractProblem {
 
   @Override
   public Long solve() {
-    final int N = 20;
+    return smallestMultiple(20);
+  }
+
+  long smallestMultiple(int max) {
     long n = 1;
-    for (long p : Primes.basicSieve(N)) {
+    for (long p : Primes.basicSieve(max)) {
       long m = p;
-      for (long x = p * p; x < N; x *= p) {
+      for (long x = p * p; x <= max; x *= p) {
         m = x;
       }
       n *= m;
