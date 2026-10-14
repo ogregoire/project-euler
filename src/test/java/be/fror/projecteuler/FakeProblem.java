@@ -10,28 +10,36 @@ import java.util.Arrays;
  */
 final class FakeProblem implements Problem {
 
+  private final int id;
   private final Object answer;
   private final FakeClock clock;
   private final long[] runNanos;
   private int runs;
 
-  private FakeProblem(Object answer, FakeClock clock, long[] runNanos) {
+  private FakeProblem(int id, Object answer, FakeClock clock, long[] runNanos) {
+    this.id = id;
     this.answer = answer;
     this.clock = clock;
     this.runNanos = runNanos;
   }
 
   static FakeProblem takingMillis(Object answer, FakeClock clock, long... runMillis) {
-    return new FakeProblem(answer, clock, Arrays.stream(runMillis).map(MILLISECONDS::toNanos).toArray());
+    return new FakeProblem(
+        7, answer, clock, Arrays.stream(runMillis).map(MILLISECONDS::toNanos).toArray());
   }
 
   static FakeProblem takingNanos(Object answer, FakeClock clock, long... runNanos) {
-    return new FakeProblem(answer, clock, runNanos);
+    return new FakeProblem(7, answer, clock, runNanos);
+  }
+
+  /** Returns a copy of this problem, with the given ID instead of 7. */
+  FakeProblem withId(int id) {
+    return new FakeProblem(id, answer, clock, runNanos);
   }
 
   @Override
   public int getId() {
-    return 7;
+    return id;
   }
 
   @Override

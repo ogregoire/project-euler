@@ -23,16 +23,19 @@ lightning fast solution.
 
 ## Running the application
 
-So far, run it from an IDE, I haven't taken the time to make a proper runnable
-application yet. Anyways, you can get it compiled like this:
-
     $ git clone https://github.com/fror/project-euler.git
     $ cd project-euler
-    $ mvn clean package
+    $ ./euler 23            # one problem
+    $ ./euler 1-10,23       # ranges and lists
+    $ ./euler all           # every solved problem, then a summary table
 
-When running the application, you'll be asked which problem you want to solve.
-Just enter the number as is and press `Enter`. The problem will be loaded and
-run.
+Without arguments, `./euler` asks which problems to run. The script compiles
+the sources with Maven whenever they changed since its last run. It exits with
+1 if a solution fails, times out or disagrees with an alternative solution.
+
+Solutions are registered in
+`src/main/resources/META-INF/services/be.fror.projecteuler.Problem`: add a
+line there for each new one (a test fails when one is missing).
 
 ## The framework
 

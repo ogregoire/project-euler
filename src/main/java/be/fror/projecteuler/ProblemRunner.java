@@ -12,7 +12,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import java.io.PrintStream;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeoutException;
@@ -53,15 +52,37 @@ public class ProblemRunner {
     this.output = output;
   }
 
+  /** What happened when running a solution. */
+  public sealed interface Outcome {
+
+    /**
+     * The solution gave an answer.
+     *
+     * @param answer the answer as text, so that answers boxed in different types (Integer,
+     *     Long...) can be compared.
+     * @param medianNanos the median time of a warm run.
+     */
+    record Solved(String answer, long medianNanos) implements Outcome {}
+
+    /** The cold run took more than one minute. */
+    record TimedOut() implements Outcome {}
+
+    /**
+     * The solution threw.
+     *
+     * @param cause what the solution threw.
+     */
+    record Failed(Throwable cause) implements Outcome {}
+  }
+
   /**
    * Solves the problem and prints its result and timings on one line, prefixed by the label.
    *
    * @param label who wrote the solution.
    * @param problem the problem to solve.
-   * @return the result as text, so that results boxed in different types (Integer, Long...) can
-   *     be compared; or an empty optional if the cold run took more than one minute.
+   * @return the outcome of the run.
    */
-  public Optional<String> run(String label, Problem problem) {
+  public Outcome run(String label, Problem problem) {
     var prefix = String.format("\t%-9s", label + ":");
     var coldRun = executor.submit(() -> time(problem));
     try {
@@ -70,17 +91,22 @@ public class ProblemRunner {
       var result = String.valueOf(cold.result());
       var perRun = measurement.perRunNanos();
       var runs = measurement.runs();
+      var median = median(perRun);
       output.printf("%s %s  median %s  (min %s, cold %s, %d run%s)%n",
-          prefix, result, format(median(perRun)), format(perRun[0]), format(cold.nanos()),
+          prefix, result, format(median), format(perRun[0]), format(cold.nanos()),
           runs, runs == 1 ? "" : "s");
-      return Optional.of(result);
+      return new Outcome.Solved(result, median);
     } catch (TimeoutException e) {
       // Solutions don't check for interruption: this abandons the thread more than it stops it.
       coldRun.cancel(true);
       output.printf("%s failed to get a result under one minute.%n", prefix);
-      return Optional.empty();
+      return new Outcome.TimedOut();
     } catch (ExecutionException e) {
-      throw rethrow(e.getCause());
+      // Any throwable, even an Error such as StackOverflowError, only means this solution failed.
+      var cause = e.getCause();
+      var where = cause.getStackTrace().length > 0 ? " at " + cause.getStackTrace()[0] : "";
+      output.printf("%s failed: %s%s%n", prefix, cause, where);
+      return new Outcome.Failed(cause);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       throw new IllegalStateException("Interrupted while solving", e);
@@ -155,13 +181,5 @@ public class ProblemRunner {
       return String.format(Locale.ROOT, "%.4g ms", nanos / 1e6);
     }
     return String.format(Locale.ROOT, "%.4g s", nanos / 1e9);
-  }
-
-  /** Rethrows what the solution threw, as if it had run on the calling thread. */
-  private static RuntimeException rethrow(Throwable cause) {
-    if (cause instanceof Error error) {
-      throw error;
-    }
-    return cause instanceof RuntimeException e ? e : new IllegalStateException(cause);
   }
 }

@@ -28,7 +28,7 @@ public class AnswersTest {
 
   @Parameters(name = "{0}")
   public static List<Object[]> solutions() throws IOException {
-    var factory = new ProblemFactory();
+    var factory = ProblemFactory.load();
     var solutions = new ArrayList<Object[]>();
     try (var reader = new BufferedReader(new InputStreamReader(
         AnswersTest.class.getResourceAsStream("/answers.sha256"), UTF_8))) {

@@ -1,0 +1,15 @@
+#!/bin/sh
+# Runs the solutions: ./euler [<problem> | <from>-<to> | all][,...]
+# Without arguments, asks which problems to run.
+set -eu
+cd "$(dirname "$0")"
+
+# Compiling through Maven takes seconds, so only do it when the sources changed since last time.
+classpath=target/classpath.txt
+if [ ! -f "$classpath" ] || [ -n "$(find pom.xml src/main -newer "$classpath" -print -quit)" ]; then
+  mvn -q compile dependency:build-classpath -Dmdep.outputFile="$classpath" >&2
+  # The plugin leaves the file untouched when the classpath didn't change.
+  touch "$classpath"
+fi
+
+exec java -cp "target/classes:$(cat "$classpath")" be.fror.projecteuler.ProjectEuler "$@"

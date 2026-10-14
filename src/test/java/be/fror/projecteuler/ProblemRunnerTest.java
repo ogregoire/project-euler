@@ -2,13 +2,14 @@ package be.fror.projecteuler;
 
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertThrows;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static org.junit.Assert.assertTrue;
+
+import be.fror.projecteuler.ProblemRunner.Outcome;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -33,7 +34,7 @@ public class ProblemRunnerTest {
     // Cold run, then ten 100 ms warm-up runs fill the first second and ten timed runs the next.
     var result = runner.run("Yours", FakeProblem.takingMillis(42, clock, 300, 100));
 
-    assertEquals(Optional.of("42"), result);
+    assertEquals(new Outcome.Solved("42", MILLISECONDS.toNanos(100)), result);
     assertEquals(
         "\tYours:    42  median 100.0 ms  (min 100.0 ms, cold 300.0 ms, 10 runs)\n", output());
   }
@@ -73,7 +74,7 @@ public class ProblemRunnerTest {
 
     var result = tickingRunner.run("Yours", FakeProblem.takingNanos(42, tickingClock, 0));
 
-    assertEquals(Optional.of("42"), result);
+    assertEquals("42", ((Outcome.Solved) result).answer());
   }
 
   @Test
@@ -88,44 +89,30 @@ public class ProblemRunnerTest {
 
   @Test
   public void returnsNullResultAsText() {
-    assertEquals(Optional.of("null"), runner.run("Yours", FakeProblem.takingMillis(null, clock, 400)));
+    assertEquals(new Outcome.Solved("null", MILLISECONDS.toNanos(400)),
+        runner.run("Yours", FakeProblem.takingMillis(null, clock, 400)));
   }
 
   @Test
-  public void rethrowsWhatTheSolutionThrows() {
+  public void reportsWhatTheSolutionThrows() {
     var failure = new IllegalStateException("broken solution");
 
-    var thrown = assertThrows(IllegalStateException.class,
-        () -> runner.run("Yours", new ThrowingProblem(failure)));
+    var outcome = runner.run("Yours", new ThrowingProblem(7, failure));
 
-    assertSame(failure, thrown);
+    assertEquals(new Outcome.Failed(failure), outcome);
+    assertTrue(output(), output().startsWith(
+        "\tYours:    failed: java.lang.IllegalStateException: broken solution"
+            + " at be.fror.projecteuler.ProblemRunnerTest.reportsWhatTheSolutionThrows("));
+  }
+
+  @Test
+  public void reportsErrorsAsFailuresToo() {
+    var failure = new StackOverflowError();
+
+    assertEquals(new Outcome.Failed(failure), runner.run("Yours", new ThrowingProblem(7, failure)));
   }
 
   private String output() {
     return bytes.toString(StandardCharsets.UTF_8).replace(System.lineSeparator(), "\n");
-  }
-
-  private static final class ThrowingProblem implements Problem {
-
-    private final RuntimeException failure;
-
-    ThrowingProblem(RuntimeException failure) {
-      this.failure = failure;
-    }
-
-    @Override
-    public int getId() {
-      return 7;
-    }
-
-    @Override
-    public Object solve() {
-      throw failure;
-    }
-
-    @Override
-    public Object call() {
-      return solve();
-    }
   }
 }

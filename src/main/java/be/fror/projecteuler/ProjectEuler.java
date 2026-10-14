@@ -19,7 +19,9 @@ public class ProjectEuler {
     var executor = Executors.newCachedThreadPool(
         Thread.ofPlatform().daemon().name("problem-", 0).factory());
     var problemRunner = new ProblemRunner(executor, System::nanoTime, System.out);
-    new Application(System.out, new Scanner(System.in), new ProblemFactory(), problemRunner).start();
+    var application = new Application(
+        System.out, new Scanner(System.in), ProblemFactory.load(), problemRunner);
+    System.exit(application.start(args));
   }
 
 }
