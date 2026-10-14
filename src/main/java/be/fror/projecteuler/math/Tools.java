@@ -41,8 +41,7 @@ public class Tools {
       return false;
     }
     // Reverse the lower half of the digits until it meets the upper half. The reversed half has
-    // at most 5 digits, so it can't overflow. Dividing by the constant 10 compiles to a
-    // multiplication.
+    // at most 5 digits, so it can't overflow.
     var reversed = 0;
     while (n > reversed) {
       reversed = reversed * 10 + n % 10;
