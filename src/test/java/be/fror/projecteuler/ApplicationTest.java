@@ -1,11 +1,6 @@
 package be.fror.projecteuler;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.junit.Assert.assertEquals;
-
-import com.google.common.base.Stopwatch;
-import com.google.common.base.Ticker;
-import com.google.common.util.concurrent.SimpleTimeLimiter;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -20,8 +15,11 @@ import org.junit.Test;
 
 public class ApplicationTest {
 
+  private static final String TIMINGS = "  median 400.0 ms  (min 400.0 ms, cold 400.0 ms, 2 runs)";
+
   private final ExecutorService executor = Executors.newCachedThreadPool();
   private final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+  private final FakeClock clock = new FakeClock();
 
   @After
   public void tearDown() {
@@ -30,64 +28,69 @@ public class ApplicationTest {
 
   @Test
   public void runsOnlyOriginalSolutionWhenClaudeHasNone() {
-    run(new FakeProblemFactory(new FakeProblem(7, 42), null));
+    run(new FakeProblemFactory(problem(42), null));
 
     assertEquals(
         "Enter problem number: \n"
             + "Running problem 7...\n"
-            + "\tYours:    42 in 1.000 ms\n"
+            + "\tYours:    42" + TIMINGS + "\n"
             + "\n",
         output());
   }
 
   @Test
   public void runsBothSolutions() {
-    run(new FakeProblemFactory(new FakeProblem(7, 42), new FakeProblem(7, 42L)));
+    run(new FakeProblemFactory(problem(42), problem(42L)));
 
     assertEquals(
         "Enter problem number: \n"
             + "Running problem 7...\n"
-            + "\tYours:    42 in 1.000 ms\n"
-            + "\tClaude's: 42 in 1.000 ms\n"
+            + "\tYours:    42" + TIMINGS + "\n"
+            + "\tClaude's: 42" + TIMINGS + "\n"
             + "\n",
         output());
   }
 
   @Test
   public void reportsDifferentResults() {
-    run(new FakeProblemFactory(new FakeProblem(7, 42), new FakeProblem(7, 43)));
+    run(new FakeProblemFactory(problem(42), problem(43)));
 
     assertEquals(
         "Enter problem number: \n"
             + "Running problem 7...\n"
-            + "\tYours:    42 in 1.000 ms\n"
-            + "\tClaude's: 43 in 1.000 ms\n"
+            + "\tYours:    42" + TIMINGS + "\n"
+            + "\tClaude's: 43" + TIMINGS + "\n"
             + "\tResults differ!\n"
             + "\n",
         output());
   }
 
+  @Test
+  public void printsNullResult() {
+    run(new FakeProblemFactory(problem(null), problem(null)));
+
+    assertEquals(
+        "Enter problem number: \n"
+            + "Running problem 7...\n"
+            + "\tYours:    null" + TIMINGS + "\n"
+            + "\tClaude's: null" + TIMINGS + "\n"
+            + "\n",
+        output());
+  }
+
+  /** Every run takes 400 ms: two fit in the one-second warm-up, two in the measurement. */
+  private Problem problem(Object answer) {
+    return FakeProblem.takingMillis(answer, clock, 400);
+  }
+
   private void run(ProblemFactory problemFactory) {
     var out = new PrintStream(bytes, true, StandardCharsets.UTF_8);
-    var runner = new ProblemRunner(
-        SimpleTimeLimiter.create(executor), () -> Stopwatch.createUnstarted(new OneMillisecondTicker()), out);
+    var runner = new ProblemRunner(executor, clock, out);
     new Application(out, new Scanner("7"), problemFactory, runner).start();
   }
 
   private String output() {
     return bytes.toString(StandardCharsets.UTF_8).replace(System.lineSeparator(), "\n");
-  }
-
-  /** Each read advances by one millisecond, so a start/stop pair always measures exactly 1 ms. */
-  private static final class OneMillisecondTicker extends Ticker {
-
-    private long nanos;
-
-    @Override
-    public long read() {
-      nanos += MILLISECONDS.toNanos(1);
-      return nanos;
-    }
   }
 
   private static final class FakeProblemFactory extends ProblemFactory {
@@ -108,24 +111,6 @@ public class ApplicationTest {
     @Override
     public Optional<Problem> getClaudeProblem(int id) {
       return Optional.ofNullable(claudeProblem);
-    }
-  }
-
-  private record FakeProblem(int id, Object answer) implements Problem {
-
-    @Override
-    public int getId() {
-      return id;
-    }
-
-    @Override
-    public Object solve() {
-      return answer;
-    }
-
-    @Override
-    public Object call() {
-      return answer;
     }
   }
 }

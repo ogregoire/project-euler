@@ -39,9 +39,17 @@ run.
 Currently, the framework is taken quite directly from
 [Colin Decker's framework][2].
 
-It is currently slowing the solution because it uses extensively reflection,
-especially for the timer in order to make sure a solution runs below the minute.
-A rewrite is to be done, using a minimal amount of reflection.
+Each solution first runs once, "cold", and must finish within a minute. It is
+then warmed up for about a second so the JIT compiles it, and timed for about
+another second. The median and minimum of the timed runs are reported along
+with the cold time.
+
+## Checking answers
+
+`src/test/resources/answers.sha256` holds the SHA-256 of each known answer, so
+the tests can check every solution without publishing the answers. To add one:
+
+    $ printf %s <answer> | shasum -a 256
 
   [1]: https://projecteuler.net/
   [2]: https://github.com/cgdecker/project-euler

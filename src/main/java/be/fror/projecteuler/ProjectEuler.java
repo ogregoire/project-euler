@@ -5,7 +5,8 @@
  */
 package be.fror.projecteuler;
 
-import com.google.inject.Guice;
+import java.util.Scanner;
+import java.util.concurrent.Executors;
 
 /**
  *
@@ -14,9 +15,11 @@ import com.google.inject.Guice;
 public class ProjectEuler {
 
   public static void main(String[] args) {
-    Guice.createInjector(new IOModule(), new TimeModule(), new ApplicationModule())
-        .getInstance(Application.class)
-        .start();
+    // Daemon threads, so that an abandoned solution doesn't keep the JVM alive.
+    var executor = Executors.newCachedThreadPool(
+        Thread.ofPlatform().daemon().name("problem-", 0).factory());
+    var problemRunner = new ProblemRunner(executor, System::nanoTime, System.out);
+    new Application(System.out, new Scanner(System.in), new ProblemFactory(), problemRunner).start();
   }
 
 }

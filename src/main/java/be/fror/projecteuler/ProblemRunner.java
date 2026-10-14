@@ -5,59 +5,163 @@
  */
 package be.fror.projecteuler;
 
-import com.google.common.base.Stopwatch;
-import com.google.common.base.Throwables;
-import com.google.common.util.concurrent.TimeLimiter;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
-import com.google.inject.Inject;
-import com.google.inject.Provider;
+import static java.util.concurrent.TimeUnit.MICROSECONDS;
+import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.io.PrintStream;
+import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeoutException;
+import java.util.function.LongSupplier;
+import java.util.stream.LongStream;
 
 /**
+ * Solves problems and measures how long they take.
+ *
+ * <p>A single run mostly measures class loading and the interpreter. So after a first, "cold" run,
+ * the problem is solved repeatedly: first untimed to let the JIT compile it, then timed.
  *
  * @author Olivier Grégoire
  */
 public class ProblemRunner {
 
-  private final TimeLimiter timeLimiter;
-  private final Provider<Stopwatch> stopwatchProvider;
+  private static final long WARM_UP_NANOS = SECONDS.toNanos(1);
+  private static final long MEASUREMENT_NANOS = SECONDS.toNanos(1);
+  private static final long MIN_SAMPLE_NANOS = MICROSECONDS.toNanos(100);
+
+  private final ExecutorService executor;
+  private final LongSupplier nanoClock;
   private final PrintStream output;
 
-  @Inject
-  public ProblemRunner(TimeLimiter timeLimiter, Provider<Stopwatch> stopwatchProvider,
-      PrintStream output) {
-    this.timeLimiter = timeLimiter;
-    this.stopwatchProvider = stopwatchProvider;
+  /** Written with every answer, so that the JIT can't drop solutions whose answer is unused. */
+  private volatile int sink;
+
+  /**
+   * Creates a runner.
+   *
+   * @param executor runs the solutions, so that a cold run taking too long can be abandoned.
+   * @param nanoClock the clock used for timing, typically {@code System::nanoTime}.
+   * @param output where results and timings are printed.
+   */
+  public ProblemRunner(ExecutorService executor, LongSupplier nanoClock, PrintStream output) {
+    this.executor = executor;
+    this.nanoClock = nanoClock;
     this.output = output;
   }
 
   /**
-   * Solves the problem and prints its result and solving time on one line, prefixed by the label.
+   * Solves the problem and prints its result and timings on one line, prefixed by the label.
    *
    * @param label who wrote the solution.
    * @param problem the problem to solve.
-   * @return the result, or an empty optional if the problem took more than one minute.
+   * @return the result as text, so that results boxed in different types (Integer, Long...) can
+   *     be compared; or an empty optional if the cold run took more than one minute.
    */
-  public Optional<Object> run(String label, Problem problem) {
-    Stopwatch stopwatch = stopwatchProvider.get();
-
-    Problem timeLimitedProblem = timeLimiter.newProxy(problem, Problem.class, 1, TimeUnit.MINUTES);
+  public Optional<String> run(String label, Problem problem) {
+    var prefix = String.format("\t%-9s", label + ":");
+    var coldRun = executor.submit(() -> time(problem));
     try {
-      Object result;
-      stopwatch.start();
-      result = timeLimitedProblem.solve();
-      stopwatch.stop();
-
-      output.printf("\t%-9s %s in %s%n", label + ":", result, stopwatch);
+      var cold = coldRun.get(1, MINUTES);
+      var measurement = executor.submit(() -> warmUpAndMeasure(problem, cold.nanos())).get();
+      var result = String.valueOf(cold.result());
+      var perRun = measurement.perRunNanos();
+      var runs = measurement.runs();
+      output.printf("%s %s  median %s  (min %s, cold %s, %d run%s)%n",
+          prefix, result, format(median(perRun)), format(perRun[0]), format(cold.nanos()),
+          runs, runs == 1 ? "" : "s");
       return Optional.of(result);
-    } catch (UncheckedTimeoutException e) {
-      output.printf("\t%-9s failed to get a result under one minute.%n", label + ":");
+    } catch (TimeoutException e) {
+      // Solutions don't check for interruption: this abandons the thread more than it stops it.
+      coldRun.cancel(true);
+      output.printf("%s failed to get a result under one minute.%n", prefix);
       return Optional.empty();
-    } catch (Exception e) {
-      throw Throwables.propagate(e);
+    } catch (ExecutionException e) {
+      throw rethrow(e.getCause());
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new IllegalStateException("Interrupted while solving", e);
     }
+  }
+
+  /** Times at least one sample, more if they fit the budget. */
+  private Measurement warmUpAndMeasure(Problem problem, long coldNanos) {
+    // A new sample starts only if the previous one suggests it fits in the remaining budget,
+    // so that slow solutions don't take several times longer to report.
+    var lastNanos = coldNanos;
+    var warmUpStart = nanoClock.getAsLong();
+    while (nanoClock.getAsLong() - warmUpStart + lastNanos <= WARM_UP_NANOS) {
+      lastNanos = time(problem, 1);
+    }
+
+    // The clock is too coarse for the fastest solutions (about 42 ns on Apple silicon), so each
+    // sample times a batch of runs long enough to measure, and keeps the average run.
+    var batch = (int) Math.ceilDiv(MIN_SAMPLE_NANOS, Math.max(lastNanos, 1));
+
+    var perRunNanos = LongStream.builder();
+    var samples = 0;
+    var measurementStart = nanoClock.getAsLong();
+    do {
+      lastNanos = time(problem, batch);
+      perRunNanos.add(lastNanos / batch);
+      samples++;
+    } while (nanoClock.getAsLong() - measurementStart + lastNanos <= MEASUREMENT_NANOS);
+    return new Measurement(perRunNanos.build().sorted().toArray(), (long) samples * batch);
+  }
+
+  /** Returns how long it took to solve the problem {@code times} times in a row. */
+  private long time(Problem problem, int times) {
+    var answers = 0;
+    var start = nanoClock.getAsLong();
+    for (var i = 0; i < times; i++) {
+      answers += Objects.hashCode(problem.solve());
+    }
+    var nanos = nanoClock.getAsLong() - start;
+    sink = answers;
+    return nanos;
+  }
+
+  private Run time(Problem problem) {
+    var start = nanoClock.getAsLong();
+    var result = problem.solve();
+    return new Run(result, nanoClock.getAsLong() - start);
+  }
+
+  private record Run(Object result, long nanos) {}
+
+  /** The sorted average run time of each sample, and how many runs all the samples made. */
+  private record Measurement(long[] perRunNanos, long runs) {}
+
+  private static long median(long[] sorted) {
+    return (sorted[(sorted.length - 1) / 2] + sorted[sorted.length / 2]) / 2;
+  }
+
+  static String format(long nanos) {
+    if (nanos == 0) {
+      // Even a batch of runs was too fast to measure, typically because the JIT reduced the
+      // solution to a constant.
+      return "< 1 ns";
+    }
+    if (nanos < 1_000) {
+      return nanos + " ns";
+    }
+    if (nanos < 1_000_000) {
+      return String.format(Locale.ROOT, "%.4g µs", nanos / 1e3);
+    }
+    if (nanos < 1_000_000_000) {
+      return String.format(Locale.ROOT, "%.4g ms", nanos / 1e6);
+    }
+    return String.format(Locale.ROOT, "%.4g s", nanos / 1e9);
+  }
+
+  /** Rethrows what the solution threw, as if it had run on the calling thread. */
+  private static RuntimeException rethrow(Throwable cause) {
+    if (cause instanceof Error error) {
+      throw error;
+    }
+    return cause instanceof RuntimeException e ? e : new IllegalStateException(cause);
   }
 }
