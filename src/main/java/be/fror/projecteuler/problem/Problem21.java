@@ -13,17 +13,17 @@ public class Problem21 extends AbstractProblem {
 
   @Override
   public Object solve() {
-    int N = 10000;
-    int[] d = new int[N];
-    int sum = 0;
-    for (int i = 1; i < N; i++) {
-      for (int j = i << 1; j < N; j += i) {
-        d[j] += i;
+    var N = 10000;
+    var sumOfDivisors = new int[N];
+    var sumOfAmicableNumbers = 0;
+    for (var number = 1; number < N; number++) {
+      for (var multiple = number + number; multiple < N; multiple += number) {
+        sumOfDivisors[multiple] += number;
       }
-      if (d[i] < i && i == d[d[i]]) {
-        sum += i + d[i];
+      if (sumOfDivisors[number] < number && number == sumOfDivisors[sumOfDivisors[number]]) {
+        sumOfAmicableNumbers += number + sumOfDivisors[number];
       }
     }
-    return sum;
+    return sumOfAmicableNumbers;
   }
 }
