@@ -47,9 +47,4 @@ final class FakeProblem implements Problem {
     clock.advanceNanos(runNanos[Math.min(runs++, runNanos.length - 1)]);
     return answer;
   }
-
-  @Override
-  public Object call() {
-    return solve();
-  }
 }

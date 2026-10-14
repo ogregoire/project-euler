@@ -8,8 +8,6 @@ package be.fror.projecteuler.problem;
 import static be.fror.projecteuler.math.Primes.isPrime;
 import static be.fror.projecteuler.math.Primes.sieve;
 
-import com.google.common.base.Stopwatch;
-
 /**
  *
  * @author Olivier Grégoire
@@ -18,7 +16,6 @@ public class Problem60 extends AbstractProblem {
 
   @Override
   public Object solve() {
-    Stopwatch stopwatch = Stopwatch.createStarted();
     int min = Integer.MAX_VALUE;
     final int[] primes = sieve();
     for (int a = 1; a < primes.length; a++) { // skip 2
@@ -49,7 +46,6 @@ public class Problem60 extends AbstractProblem {
               // Smallest, we don't care about the other candidates
               int primeE = primes[quintuples[0]];
               int sum = primeA + primeB + primeC + primeD + primeE;
-              System.out.printf("sum=%d (%d, %d, %d, %d, %d), found after %s%n", sum, primeA, primeB, primeC, primeD, primeE, stopwatch);
               if (sum < min) {
                 min = sum;
               }

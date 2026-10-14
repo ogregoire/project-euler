@@ -5,9 +5,9 @@
  */
 package be.fror.projecteuler.math;
 
-import org.hamcrest.CoreMatchers;
-import org.junit.Assert;
-import org.junit.Test;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import org.junit.jupiter.api.Test;
 
 /**
  *
@@ -18,10 +18,10 @@ public class ToolsTest {
   @Test
   public void testIsPalindromic() {
     for (int i = 1; i < 100; i++) {
-      Assert.assertThat(Tools.isPalindromic(i), CoreMatchers.is((i < 10 || i % 11 == 0)));
+      assertThat(Tools.isPalindromic(i)).isEqualTo(i < 10 || i % 11 == 0);
     }
     for (int i = 101; i < 1000; i++) {
-      Assert.assertThat(Tools.isPalindromic(i), CoreMatchers.is(i / 100 == i % 10));
+      assertThat(Tools.isPalindromic(i)).isEqualTo(i / 100 == i % 10);
     }
   }
 }

@@ -1,13 +1,13 @@
 package be.fror.projecteuler;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class ProblemSelectionTest {
 
@@ -15,27 +15,27 @@ public class ProblemSelectionTest {
 
   @Test
   public void selectsSingleProblem() {
-    assertEquals(List.of(3), parse("3"));
+    assertThat(parse("3")).isEqualTo(List.of(3));
   }
 
   @Test
   public void rangeSkipsUnsolvedProblems() {
-    assertEquals(List.of(1, 2, 3, 5), parse("1-5"));
+    assertThat(parse("1-5")).isEqualTo(List.of(1, 2, 3, 5));
   }
 
   @Test
   public void allSelectsEverySolvedProblem() {
-    assertEquals(List.of(1, 2, 3, 5, 8, 60), parse("all"));
+    assertThat(parse("all")).isEqualTo(List.of(1, 2, 3, 5, 8, 60));
   }
 
   @Test
   public void keepsOrderGivenWithoutDuplicates() {
-    assertEquals(List.of(8, 1, 2, 3, 60), parse("8,1-3", "2", "60"));
+    assertThat(parse("8,1-3", "2", "60")).isEqualTo(List.of(8, 1, 2, 3, 60));
   }
 
   @Test
   public void acceptsSpacesAsSeparators() {
-    assertEquals(List.of(1, 3, 5), parse(" 1, 3  5 "));
+    assertThat(parse(" 1, 3  5 ")).isEqualTo(List.of(1, 3, 5));
   }
 
   @Test
@@ -65,7 +65,8 @@ public class ProblemSelectionTest {
   }
 
   private static void assertRejected(String message, String... args) {
-    var thrown = assertThrows(IllegalArgumentException.class, () -> parse(args));
-    assertEquals(message, thrown.getMessage());
+    assertThatThrownBy(() -> parse(args))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage(message);
   }
 }

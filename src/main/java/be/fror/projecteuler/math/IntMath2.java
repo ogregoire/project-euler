@@ -30,4 +30,20 @@ public class IntMath2 {
     }
     return result;
   }
+
+  /**
+   * Returns the greatest common divisor of {@code a} and {@code b}.
+   *
+   * @param a must be non-negative
+   * @param b must be non-negative
+   * @return the greatest common divisor, or 0 if both are 0
+   */
+  public static int gcd(int a, int b) {
+    while (b != 0) {
+      int r = a % b;
+      a = b;
+      b = r;
+    }
+    return a;
+  }
 }

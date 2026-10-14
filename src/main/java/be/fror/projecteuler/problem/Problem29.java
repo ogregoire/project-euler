@@ -5,9 +5,7 @@
  */
 package be.fror.projecteuler.problem;
 
-import static com.google.common.math.IntMath.gcd;
-import static com.google.common.math.IntMath.sqrt;
-import static java.math.RoundingMode.FLOOR;
+import static be.fror.projecteuler.math.IntMath2.gcd;
 
 /**
  * @author Olivier Grégoire
@@ -40,7 +38,7 @@ public class Problem29 extends AbstractProblem {
         }
 
         // Step two: find actual number of powers.
-        int sqrtN = sqrt(N, FLOOR);
+        int sqrtN = (int) Math.sqrt(N);
         boolean[] powersNotToRepeat = new boolean[sqrtN + 1];
         for (int i = 2; i <= sqrtN; i++) {
             if (!powersNotToRepeat[i]) {

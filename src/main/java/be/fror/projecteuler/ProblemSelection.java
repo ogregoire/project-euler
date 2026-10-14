@@ -8,7 +8,8 @@ import java.util.SortedSet;
 /** Parses which problems to run, such as {@code 23}, {@code 1-10}, {@code 1,5,20-30} or {@code all}. */
 final class ProblemSelection {
 
-  static final String USAGE = "Usage: ./euler [<problem> | <from>-<to> | all][,...]";
+  static final String USAGE =
+      "Usage: ./euler [-h | --help] [<problem> | <from>-<to> | all][,...]";
 
   private ProblemSelection() {}
 

@@ -5,9 +5,7 @@
  */
 package be.fror.projecteuler.problem;
 
-import be.fror.projecteuler.util.Tools;
-import com.google.common.base.CharMatcher;
-import com.google.common.base.Splitter;
+import be.fror.projecteuler.util.Resources;
 
 import java.util.List;
 
@@ -17,7 +15,7 @@ import java.util.List;
  */
 public class Problem42 extends AbstractProblem {
 
-  private static final List<String> words = Tools.readWords("words.txt", Splitter.on(',').trimResults(CharMatcher.is('"')));
+  private static final List<String> words = Resources.readWords("words.txt");
 
   @Override
   public Object solve() {

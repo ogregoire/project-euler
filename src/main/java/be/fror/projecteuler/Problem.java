@@ -5,13 +5,11 @@
  */
 package be.fror.projecteuler;
 
-import java.util.concurrent.Callable;
-
 /**
  *
  * @author Olivier Grégoire
  */
-public interface Problem extends Callable<Object> {
+public interface Problem {
 
   /**
    * Gets the problem number for this problem.

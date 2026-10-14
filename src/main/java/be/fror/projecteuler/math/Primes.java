@@ -5,10 +5,6 @@
  */
 package be.fror.projecteuler.math;
 
-import com.google.common.base.Supplier;
-
-import static com.google.common.base.Suppliers.*;
-
 import static java.util.Arrays.*;
 
 import be.fror.projecteuler.collect.IntList;
@@ -28,12 +24,12 @@ public final class Primes {
   }
 
   public static int[] sieve() {
-    return primesUntilLimitSupplier.get();
+    return PrimesUntilLimit.PRIMES;
   }
 
   public static int[] sieve(final int upperBound) {
     if (upperBound <= LIMIT) {
-      int[] sieve = primesUntilLimitSupplier.get();
+      int[] sieve = PrimesUntilLimit.PRIMES;
       int i = binarySearch(sieve, upperBound);
       return copyOf(sieve, i < 0 ? ~i : i);
     } else {
@@ -68,10 +64,14 @@ public final class Primes {
   // Currently, limit is sqrt(Integer.MAX_VALUE)
   private static final int LIMIT = (int) Math.sqrt(Integer.MAX_VALUE);
 
-  private static final Supplier<int[]> primesUntilLimitSupplier = memoize(() -> doSieve(LIMIT));
+  // The holder class, and so the sieve, is only initialized on first use.
+  private static final class PrimesUntilLimit {
+
+    static final int[] PRIMES = doSieve(LIMIT);
+  }
 
   public static boolean isPrime(final int n) {
-    final int[] primesUntilLimit = primesUntilLimitSupplier.get();
+    final int[] primesUntilLimit = PrimesUntilLimit.PRIMES;
     if (n <= LIMIT) {
       return binarySearch(primesUntilLimit, n) >= 0;
     }

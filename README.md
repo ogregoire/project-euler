@@ -28,10 +28,12 @@ lightning fast solution.
     $ ./euler 23            # one problem
     $ ./euler 1-10,23       # ranges and lists
     $ ./euler all           # every solved problem, then a summary table
+    $ ./euler --help        # usage
 
 Without arguments, `./euler` asks which problems to run. The script compiles
-the sources with Maven whenever they changed since its last run. It exits with
-1 if a solution fails, times out or disagrees with an alternative solution.
+the sources with the Maven Wrapper (`./mvnw`) whenever they changed since its
+last run. It exits with 1 if a solution fails, times out or disagrees with an
+alternative solution, and with 2 if the selection is invalid.
 
 Solutions are registered in
 `src/main/resources/META-INF/services/be.fror.projecteuler.Problem`: add a

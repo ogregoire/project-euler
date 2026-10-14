@@ -23,9 +23,4 @@ final class ThrowingProblem implements Problem {
     }
     throw (RuntimeException) failure;
   }
-
-  @Override
-  public Object call() {
-    return solve();
-  }
 }

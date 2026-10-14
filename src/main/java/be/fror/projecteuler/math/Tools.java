@@ -5,6 +5,8 @@
  */
 package be.fror.projecteuler.math;
 
+import java.math.BigInteger;
+
 /**
  *
  * @author Olivier Grégoire
@@ -30,6 +32,20 @@ public class Tools {
       n = q;
     }
     return true;
+  }
+
+  /**
+   * Returns {@code n!}.
+   *
+   * @param n must be non-negative
+   * @return the factorial of {@code n}
+   */
+  public static BigInteger factorial(int n) {
+    BigInteger result = BigInteger.ONE;
+    for (int i = 2; i <= n; i++) {
+      result = result.multiply(BigInteger.valueOf(i));
+    }
+    return result;
   }
 
 }

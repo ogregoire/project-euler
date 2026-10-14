@@ -1,7 +1,6 @@
 package be.fror.projecteuler;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -11,8 +10,10 @@ import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 public class ApplicationTest {
 
@@ -20,9 +21,10 @@ public class ApplicationTest {
 
   private final ExecutorService executor = Executors.newCachedThreadPool();
   private final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+  private final ByteArrayOutputStream errorBytes = new ByteArrayOutputStream();
   private final FakeClock clock = new FakeClock();
 
-  @After
+  @AfterEach
   public void tearDown() {
     executor.shutdownNow();
   }
@@ -33,13 +35,12 @@ public class ApplicationTest {
 
     var exitCode = start(factory, "7");
 
-    assertEquals(0, exitCode);
-    assertEquals(
+    assertThat(exitCode).isEqualTo(0);
+    assertThat(output()).isEqualTo(
         "Enter problems (e.g. 23, 1-10 or all): \n"
             + "Running problem 7...\n"
             + "\tYours:    42" + TIMINGS + "\n"
-            + "\n",
-        output());
+            + "\n");
   }
 
   @Test
@@ -48,14 +49,13 @@ public class ApplicationTest {
 
     var exitCode = start(factory, "", "7");
 
-    assertEquals(0, exitCode);
-    assertEquals(
+    assertThat(exitCode).isEqualTo(0);
+    assertThat(output()).isEqualTo(
         "\n"
             + "Running problem 7...\n"
             + "\tYours:    42" + TIMINGS + "\n"
             + "\tClaude's: 42" + TIMINGS + "\n"
-            + "\n",
-        output());
+            + "\n");
   }
 
   @Test
@@ -64,15 +64,14 @@ public class ApplicationTest {
 
     var exitCode = start(factory, "", "7");
 
-    assertEquals(Application.EXIT_FAILURE, exitCode);
-    assertEquals(
+    assertThat(exitCode).isEqualTo(Application.EXIT_FAILURE);
+    assertThat(output()).isEqualTo(
         "\n"
             + "Running problem 7...\n"
             + "\tYours:    42" + TIMINGS + "\n"
             + "\tClaude's: 43" + TIMINGS + "\n"
             + "\tResults differ!\n"
-            + "\n",
-        output());
+            + "\n");
   }
 
   @Test
@@ -81,13 +80,12 @@ public class ApplicationTest {
 
     start(factory, "", "7");
 
-    assertEquals(
+    assertThat(output()).isEqualTo(
         "\n"
             + "Running problem 7...\n"
             + "\tYours:    null" + TIMINGS + "\n"
             + "\tClaude's: null" + TIMINGS + "\n"
-            + "\n",
-        output());
+            + "\n");
   }
 
   @Test
@@ -98,8 +96,8 @@ public class ApplicationTest {
 
     var exitCode = start(factory, "", "1-2");
 
-    assertEquals(0, exitCode);
-    assertEquals(
+    assertThat(exitCode).isEqualTo(0);
+    assertThat(output()).isEqualTo(
         "\n"
             + "Running problem 1...\n"
             + "\tYours:    41" + TIMINGS + "\n"
@@ -110,8 +108,7 @@ public class ApplicationTest {
             + "\n"
             + "Problem       Yours    Claude's\n"
             + "      1    400.0 ms\n"
-            + "      2    400.0 ms    100.0 ms  4.0× faster\n",
-        output());
+            + "      2    400.0 ms    100.0 ms  4.0× faster\n");
   }
 
   @Test
@@ -122,14 +119,14 @@ public class ApplicationTest {
 
     var exitCode = start(factory, "", "all");
 
-    assertEquals(Application.EXIT_FAILURE, exitCode);
+    assertThat(exitCode).isEqualTo(Application.EXIT_FAILURE);
     var output = output();
-    assertTrue(output, output.contains("\tYours:    failed: java.lang.IllegalStateException: broken"));
-    assertTrue(output, output.contains("\tYours:    42" + TIMINGS + "\n"));
-    assertTrue(output, output.endsWith(
-        "Problem       Yours    Claude's\n"
+    assertThat(output)
+        .contains("\tYours:    failed: java.lang.IllegalStateException: broken")
+        .contains("\tYours:    42" + TIMINGS + "\n")
+        .endsWith("Problem       Yours    Claude's\n"
             + "      1      failed\n"
-            + "      2    400.0 ms\n"));
+            + "      2    400.0 ms\n");
   }
 
   @Test
@@ -138,8 +135,21 @@ public class ApplicationTest {
 
     var exitCode = start(factory, "", "8");
 
-    assertEquals(Application.EXIT_USAGE, exitCode);
-    assertEquals("Problem 8 not found.\n" + ProblemSelection.USAGE + "\n", output());
+    assertThat(exitCode).isEqualTo(Application.EXIT_USAGE);
+    assertThat(output()).isEmpty();
+    assertThat(errors()).isEqualTo("Problem 8 not found.\n" + ProblemSelection.USAGE + "\n");
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"-h", "--help"})
+  public void printsRequestedUsage(String option) {
+    var factory = new ProblemFactory(List.of(problem(7, 42)), List.of());
+
+    var exitCode = start(factory, "", option);
+
+    assertThat(exitCode).isEqualTo(0);
+    assertThat(output()).isEqualTo(ProblemSelection.USAGE + "\n");
+    assertThat(errors()).isEmpty();
   }
 
   /** Every run takes 400 ms: two fit in the one-second warm-up, two in the measurement. */
@@ -150,10 +160,19 @@ public class ApplicationTest {
   private int start(ProblemFactory problemFactory, String input, String... args) {
     var out = new PrintStream(bytes, true, StandardCharsets.UTF_8);
     var runner = new ProblemRunner(executor, clock, out);
-    return new Application(out, new Scanner(input), problemFactory, runner).start(args);
+    var err = new PrintStream(errorBytes, true, StandardCharsets.UTF_8);
+    return new Application(out, err, new Scanner(input), problemFactory, runner).start(args);
   }
 
   private String output() {
+    return text(bytes);
+  }
+
+  private String errors() {
+    return text(errorBytes);
+  }
+
+  private static String text(ByteArrayOutputStream bytes) {
     return bytes.toString(StandardCharsets.UTF_8).replace(System.lineSeparator(), "\n");
   }
 }

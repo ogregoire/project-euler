@@ -5,11 +5,9 @@
  */
 package be.fror.projecteuler.math;
 
-import com.google.common.base.Stopwatch;
-import com.google.common.base.Ticker;
 import java.util.Random;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 /**
  *
@@ -19,7 +17,7 @@ public class FibonacciTest {
 
     static final int[] numbers = new int[50];
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() {
         Random random = new Random();
         for (int i = 0; i < numbers.length; i++) {
@@ -39,8 +37,7 @@ public class FibonacciTest {
             sum += end - start;
         }
 
-        Stopwatch sw = Stopwatch.createStarted(new FixedTicker(sum / numbers.length)).stop();
-        System.out.println("testFibonacciDoubling: " + sw);
+        System.out.printf("testFibonacciDoubling: %.2f µs%n", sum / 1000.0 / numbers.length);
     }
 
     @Test
@@ -55,29 +52,6 @@ public class FibonacciTest {
             sum += end - start;
         }
 
-        Stopwatch sw = Stopwatch.createStarted(new FixedTicker(sum / numbers.length)).stop();
-        System.out.println("testFibonacciMatrix: " + sw);
-    }
-
-    static final class FixedTicker extends Ticker {
-
-        private final long value;
-        private boolean first = true;
-        int call = 0;
-
-        FixedTicker(long value) {
-            this.value = value;
-        }
-
-        @Override
-        public long read() {
-            if (first) {
-                first = false;
-                return 0;
-            } else {
-                return value;
-            }
-        }
-
+        System.out.printf("testFibonacciMatrix: %.2f µs%n", sum / 1000.0 / numbers.length);
     }
 }

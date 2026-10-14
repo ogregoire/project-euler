@@ -5,9 +5,7 @@
  */
 package be.fror.projecteuler.problem;
 
-import be.fror.projecteuler.util.Tools;
-import com.google.common.base.CharMatcher;
-import com.google.common.base.Splitter;
+import be.fror.projecteuler.util.Resources;
 
 import java.util.Collections;
 import java.util.List;
@@ -18,7 +16,7 @@ import java.util.List;
  */
 public class Problem22 extends AbstractProblem {
 
-  private static final List<String> names = Tools.readWords("names.txt", Splitter.on(',').trimResults(CharMatcher.is('"')));
+  private static final List<String> names = Resources.readWords("names.txt");
 
   @Override
   public Object solve() {

@@ -5,7 +5,7 @@
  */
 package be.fror.projecteuler.problem;
 
-import com.google.common.math.IntMath;
+import be.fror.projecteuler.math.IntMath2;
 
 /**
  *
@@ -26,7 +26,7 @@ public class Problem33 extends AbstractProblem {
         }
       }
     }
-    return d / IntMath.gcd(d, n);
+    return d / IntMath2.gcd(d, n);
   }
 
 }

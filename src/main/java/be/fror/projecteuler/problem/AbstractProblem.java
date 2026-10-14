@@ -14,11 +14,6 @@ import be.fror.projecteuler.Problem;
 public abstract class AbstractProblem implements Problem {
 
   @Override
-  public final Object call() throws Exception {
-    return solve();
-  }
-
-  @Override
   public final int getId() {
     return Integer.valueOf(getClass().getSimpleName().substring(7));
   }

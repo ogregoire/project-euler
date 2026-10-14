@@ -5,8 +5,6 @@
  */
 package be.fror.projecteuler.problem;
 
-import com.google.common.math.LongMath;
-
 /**
  *
  * @author Olivier Grégoire
@@ -29,7 +27,11 @@ public class Problem30 extends AbstractProblem {
     long number = 1;
 
     for (int i = 1; i < 10; i++) {
-      powers[i] = LongMath.pow(i, N);
+      long power = 1;
+      for (int e = 0; e < N; e++) {
+        power *= i;
+      }
+      powers[i] = power;
       diffs[i - 1] = powers[i] - powers[i - 1];
     }
 

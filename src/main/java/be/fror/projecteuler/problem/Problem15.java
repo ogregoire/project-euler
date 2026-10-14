@@ -5,7 +5,7 @@
  */
 package be.fror.projecteuler.problem;
 
-import com.google.common.math.BigIntegerMath;
+import be.fror.projecteuler.math.Tools;
 
 import java.math.BigInteger;
 
@@ -18,8 +18,8 @@ public class Problem15 extends AbstractProblem {
   @Override
   public Object solve() {
     int N = 20;
-    BigInteger facN = BigIntegerMath.factorial(N);
-    BigInteger fac2N = BigIntegerMath.factorial(2 * N);
+    BigInteger facN = Tools.factorial(N);
+    BigInteger fac2N = Tools.factorial(2 * N);
     return fac2N.divide(facN.multiply(facN));
   }
 

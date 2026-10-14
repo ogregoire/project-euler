@@ -5,10 +5,8 @@
  */
 package be.fror.projecteuler.problem;
 
-import com.google.common.io.Resources;
+import be.fror.projecteuler.util.Resources;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.EnumMap;
@@ -51,15 +49,8 @@ import java.util.Map;
  */
 public class Problem54 extends AbstractProblem {
 
-  private static final String[] lines;
-
-  static {
-    try {
-      lines = Resources.asCharSource(Resources.getResource("p054_poker.txt"), StandardCharsets.US_ASCII).readLines().toArray(new String[0]);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
+  private static final String[] lines =
+      Resources.read("p054_poker.txt").lines().toArray(String[]::new);
 
   @Override
   public Object solve() {

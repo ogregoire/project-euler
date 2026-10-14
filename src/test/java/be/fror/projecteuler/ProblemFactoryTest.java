@@ -1,10 +1,8 @@
 package be.fror.projecteuler;
 
 import static java.util.stream.Collectors.toSet;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -14,7 +12,7 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class ProblemFactoryTest {
 
@@ -41,33 +39,34 @@ public class ProblemFactoryTest {
     missing.removeAll(registered);
     var stale = new TreeSet<>(registered);
     stale.removeAll(compiled);
-    assertEquals("Missing from " + SERVICES_FILE, Set.of(), missing);
-    assertEquals("Listed in " + SERVICES_FILE + " but not solutions", Set.of(), stale);
+    assertThat(missing).as("Missing from " + SERVICES_FILE).isEmpty();
+    assertThat(stale).as("Listed in " + SERVICES_FILE + " but not solutions").isEmpty();
   }
 
   @Test
   public void getClaudeProblemFindsExistingSolution() {
     var problem = factory.getClaudeProblem(23);
 
-    assertTrue(problem.isPresent());
-    assertEquals(be.fror.projecteuler.claude.Problem23.class, problem.get().getClass());
+    assertThat(problem).containsInstanceOf(be.fror.projecteuler.claude.Problem23.class);
   }
 
   @Test
   public void getClaudeProblemIsEmptyWithoutSolution() {
     var factory = new ProblemFactory(List.of(new ThrowingProblem(1, new Error())), List.of());
 
-    assertFalse(factory.getClaudeProblem(1).isPresent());
+    assertThat(factory.getClaudeProblem(1)).isEmpty();
   }
 
   @Test
   public void getProblemFindsOriginalSolution() {
-    assertEquals(be.fror.projecteuler.problem.Problem23.class, factory.getProblem(23).getClass());
+    assertThat(factory.getProblem(23))
+        .isExactlyInstanceOf(be.fror.projecteuler.problem.Problem23.class);
   }
 
   @Test
   public void getProblemFailsWithoutSolution() {
-    assertThrows(ProblemFactory.ProblemNotFoundException.class, () -> factory.getProblem(0));
+    assertThatThrownBy(() -> factory.getProblem(0))
+        .isInstanceOf(ProblemFactory.ProblemNotFoundException.class);
   }
 
   @Test
@@ -76,7 +75,7 @@ public class ProblemFactoryTest {
         List.of(new ThrowingProblem(5, new Error()), new ThrowingProblem(2, new Error())),
         List.of(new ThrowingProblem(9, new Error())));
 
-    assertEquals(List.of(2, 5), List.copyOf(factory.ids()));
+    assertThat(factory.ids()).containsExactly(2, 5);
   }
 
   @Test
@@ -84,7 +83,7 @@ public class ProblemFactoryTest {
     var first = new ThrowingProblem(7, new Error());
     var second = new ThrowingProblem(7, new Error());
 
-    assertThrows(IllegalArgumentException.class,
-        () -> new ProblemFactory(List.of(first, second), List.of()));
+    assertThatThrownBy(() -> new ProblemFactory(List.of(first, second), List.of()))
+        .isInstanceOf(IllegalArgumentException.class);
   }
 }

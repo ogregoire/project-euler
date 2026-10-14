@@ -5,10 +5,6 @@
  */
 package be.fror.projecteuler.problem;
 
-import com.google.common.math.IntMath;
-
-import static java.math.RoundingMode.FLOOR;
-
 /**
  *
  * @author Olivier
@@ -19,7 +15,7 @@ public class Problem36 extends AbstractProblem {
   public Object solve() {
     int N = 1000000;
 
-    int[] powersOf10 = new int[IntMath.log10(N, FLOOR)];
+    int[] powersOf10 = new int[(int) Math.log10(N)];
     for (int i = 0, p = 1; i < powersOf10.length; i++, p *= 10) {
       powersOf10[i] = p;
     }

@@ -25,14 +25,16 @@ public class Application {
   public static final int EXIT_USAGE = 2;
 
   private final PrintStream output;
+  private final PrintStream error;
   private final Scanner scanner;
   private final ProblemFactory problemFactory;
   private final ProblemRunner problemRunner;
 
-  public Application(PrintStream output, Scanner scanner,
+  public Application(PrintStream output, PrintStream error, Scanner scanner,
       ProblemFactory problemFactory,
       ProblemRunner problemRunner) {
     this.output = output;
+    this.error = error;
     this.scanner = scanner;
     this.problemFactory = problemFactory;
     this.problemRunner = problemRunner;
@@ -41,17 +43,23 @@ public class Application {
   /**
    * Runs the problems selected by the arguments, or asks which ones if there are none.
    *
+   * <p>{@code -h} or {@code --help} prints the usage instead.
+   *
    * @param args the selection, such as {@code 23}, {@code 1-10}, {@code 1,5,20-30} or {@code all}.
    * @return the process exit code: 0 if every solution succeeded and agrees, else
    *     {@link #EXIT_FAILURE} or {@link #EXIT_USAGE}.
    */
   public int start(String[] args) {
+    if (List.of(args).contains("-h") || List.of(args).contains("--help")) {
+      output.printf("%s%n", ProblemSelection.USAGE);
+      return 0;
+    }
     var selection = args.length > 0 ? List.of(args) : List.of(prompt());
     List<Integer> ids;
     try {
       ids = ProblemSelection.parse(selection, problemFactory.ids());
     } catch (IllegalArgumentException e) {
-      output.printf("%s%n%s%n", e.getMessage(), ProblemSelection.USAGE);
+      error.printf("%s%n%s%n", e.getMessage(), ProblemSelection.USAGE);
       return EXIT_USAGE;
     }
 

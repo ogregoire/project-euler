@@ -20,7 +20,7 @@ public class ProjectEuler {
         Thread.ofPlatform().daemon().name("problem-", 0).factory());
     var problemRunner = new ProblemRunner(executor, System::nanoTime, System.out);
     var application = new Application(
-        System.out, new Scanner(System.in), ProblemFactory.load(), problemRunner);
+        System.out, System.err, new Scanner(System.in), ProblemFactory.load(), problemRunner);
     System.exit(application.start(args));
   }
 

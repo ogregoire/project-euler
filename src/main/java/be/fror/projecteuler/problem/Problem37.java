@@ -6,9 +6,6 @@
 package be.fror.projecteuler.problem;
 
 import be.fror.projecteuler.math.Primes;
-import com.google.common.math.IntMath;
-
-import java.math.RoundingMode;
 
 /**
  *
@@ -21,7 +18,7 @@ public class Problem37 extends AbstractProblem {
 
     int N = 1000000; // arbitrary value
 
-    int[] powersOf10 = new int[IntMath.log10(N, RoundingMode.FLOOR) + 1];
+    int[] powersOf10 = new int[(int) Math.log10(N) + 1];
     for (int i = 0, p = 1; i < powersOf10.length; i++, p *= 10) {
       powersOf10[i] = p;
     }
