@@ -13,6 +13,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 
 import java.io.PrintStream;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -33,8 +34,14 @@ public class ProblemRunner {
     this.output = output;
   }
 
-  public void run(Problem problem) {
-    output.printf("%nRunning problem %d...%n", problem.getId());
+  /**
+   * Solves the problem and prints its result and solving time on one line, prefixed by the label.
+   *
+   * @param label who wrote the solution.
+   * @param problem the problem to solve.
+   * @return the result, or an empty optional if the problem took more than one minute.
+   */
+  public Optional<Object> run(String label, Problem problem) {
     Stopwatch stopwatch = stopwatchProvider.get();
 
     Problem timeLimitedProblem = timeLimiter.newProxy(problem, Problem.class, 1, TimeUnit.MINUTES);
@@ -44,14 +51,13 @@ public class ProblemRunner {
       result = timeLimitedProblem.solve();
       stopwatch.stop();
 
-      output.printf("\tResult: %s%n", result);
-      output.printf("\tTook %s to solve.%n", stopwatch);
+      output.printf("\t%-9s %s in %s%n", label + ":", result, stopwatch);
+      return Optional.of(result);
     } catch (UncheckedTimeoutException e) {
-      output.printf("\tFailed to get a result under one minute.%n");
+      output.printf("\t%-9s failed to get a result under one minute.%n", label + ":");
+      return Optional.empty();
     } catch (Exception e) {
       throw Throwables.propagate(e);
-    } finally {
-      output.printf("%n");
     }
   }
 }

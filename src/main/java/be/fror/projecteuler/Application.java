@@ -8,6 +8,7 @@ package be.fror.projecteuler;
 import com.google.inject.Inject;
 
 import java.io.PrintStream;
+import java.util.Optional;
 import java.util.Scanner;
 
 /**
@@ -36,6 +37,18 @@ public class Application {
     int problemNumber = scanner.nextInt();
 
     Problem problem = problemFactory.getProblem(problemNumber);
-    problemRunner.run(problem);
+    Optional<Problem> claudeProblem = problemFactory.getClaudeProblem(problemNumber);
+
+    output.printf("%nRunning problem %d...%n", problemNumber);
+    Optional<Object> result = problemRunner.run("Yours", problem);
+    claudeProblem.ifPresent(p -> {
+      Optional<Object> claudeResult = problemRunner.run("Claude's", p);
+      // Compared as text: solutions may box the same answer differently (Integer, Long...).
+      if (result.isPresent() && claudeResult.isPresent()
+          && !result.get().toString().equals(claudeResult.get().toString())) {
+        output.printf("\tResults differ!%n");
+      }
+    });
+    output.printf("%n");
   }
 }

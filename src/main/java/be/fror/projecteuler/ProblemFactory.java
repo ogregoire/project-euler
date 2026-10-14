@@ -5,25 +5,44 @@
  */
 package be.fror.projecteuler;
 
+import java.util.Optional;
+
 /**
  * @author Olivier Grégoire
  */
 public class ProblemFactory {
 
     private static final String PROBLEMS_PACKAGE = "be.fror.projecteuler.problem";
+    private static final String CLAUDE_PROBLEMS_PACKAGE = "be.fror.projecteuler.claude";
 
     /**
      * Gets the problem with the given ID.
      *
      * @param id the ID (problem number) of the problem.
      * @return a problem.
+     * @throws ProblemNotFoundException if there is no problem with the given ID.
      */
     public Problem getProblem(int id) {
+        return loadProblem(PROBLEMS_PACKAGE, id)
+            .orElseThrow(() -> new ProblemNotFoundException("Problem " + id + " not found."));
+    }
+
+    /**
+     * Gets Claude's alternative solution to the problem with the given ID, if there is one.
+     *
+     * @param id the ID (problem number) of the problem.
+     * @return Claude's solution, or an empty optional if there is none for this problem.
+     */
+    public Optional<Problem> getClaudeProblem(int id) {
+        return loadProblem(CLAUDE_PROBLEMS_PACKAGE, id);
+    }
+
+    private Optional<Problem> loadProblem(String packageName, int id) {
         try {
-            Class<?> problemClass = Class.forName(PROBLEMS_PACKAGE + ".Problem" + id);
-            return (Problem) problemClass.getDeclaredConstructor().newInstance();
+            Class<?> problemClass = Class.forName(packageName + ".Problem" + id);
+            return Optional.of((Problem) problemClass.getDeclaredConstructor().newInstance());
         } catch (ClassNotFoundException e) {
-            throw new ProblemNotFoundException("Problem " + id + " not found.");
+            return Optional.empty();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
