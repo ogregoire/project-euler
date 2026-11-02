@@ -29,17 +29,17 @@ public class Problem4 extends AbstractProblem {
 
   @Override
   public Object solve() {
-    for (var i = 0; i <= 8; i++) {
-      for (var j = 0; j <= 9; j++) {
-        for (var k = 0; k <= 9; k++) {
-          var p = 999999 - i * 100001 - j * 10010 - k * 1100;
-          var q = p / 11;
-          for (var d = 90; d >= 10; d--) {
-            if (q % d == 0) {
-              if (p / (11 * d) < 1000) {
-                return p;
-              }
+    for (var i = 9; i >= 1; i--) {
+      for (var j = 9; j >= 0; j--) {
+        for (var k = 9; k >= 0; k--) {
+          var p = i * 100001 + j * 10010 + k * 1100;
+          for (var a = 990; a >= 100; a -= 11) {
+            var b = p / a;
+            if (b >= 1000) {
               break;
+            }
+            if (a * b == p && b >= 100) {
+              return p;
             }
           }
         }
