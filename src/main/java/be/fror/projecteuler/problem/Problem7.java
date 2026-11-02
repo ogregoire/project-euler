@@ -38,37 +38,56 @@ public class Problem7 extends AbstractProblem {
     if (n < 1) {
       throw new IllegalArgumentException("n must be at least 1, got " + n);
     }
-    // 2 is the only even prime, and the sieve only holds odd numbers.
-    if (n == 1) {
-      return 2;
+    // 2 and 3 are the only primes outside the wheel.
+    if (n <= 2) {
+      return n + 1;
     }
     // For n >= 6, the n-th prime is below n (ln n + ln ln n); below that, 13 is the 6th prime.
     var max = n <= 6 ? 13 : (int) Math.ceil(n * (Math.log(n) + Math.log(Math.log(n))));
-    // Slot i stands for the odd number 2i + 1, up to max included.
-    var size = (max - 1) / 2 + 1;
+    // Slot x stands for the x-th number coprime to 6 from 5 (5, 7, 11, 13, ...); the last slot
+    // stands for max or a number just past it.
+    var size = max / 3;
     var composite = new boolean[size];
-    // Slot 0 stands for 1, which isn't prime, so the sieve starts at slot 1 (3).
-    // Only primes up to sqrt(max) mark anything, since the first multiple marked is p * p, at slot
-    // 2i(i + 1); long, because that overflows an int for i above 32767.
-    for (var i = 1; 2L * i * (i + 1) < size; i++) {
-      if (!composite[i]) {
-        var p = 2 * i + 1;
-        // Odd multiples of p are 2p apart, which is p slots.
-        for (var j = 2 * i * (i + 1); j < size; j += p) {
+    var top = value(size - 1);
+    // Only primes up to sqrt(top) mark anything, since the first multiple marked is p * p.
+    // long, because p * p overflows an int for p above 46340.
+    for (var x = 0; (long) value(x) * value(x) <= top; x++) {
+      if (!composite[x]) {
+        var p = value(x);
+        // The multiples of p in the wheel are p * q for q coprime to 6, so they form two series
+        // from p * p and from p * (p + 2) (p = 6k + 5) or p * (p + 4) (p = 6k + 1), each 6p
+        // apart, which is 2p slots.
+        var step = 2 * p;
+        for (var j = index(p * p); j < size; j += step) {
+          composite[j] = true;
+        }
+        for (var j = index(p * (p + 2 + 2 * (x & 1))); j < size; j += step) {
           composite[j] = true;
         }
       }
     }
-    // Slot 0 is never marked, so it counts as the first prime, 2.
-    var count = 0;
-    for (var i = 0; i < size; i++) {
+    // 2 and 3 come before the wheel.
+    var count = 2;
+    for (var x = 0; x < size; x++) {
       // A ternary instead of an if, so the JIT turns it into arithmetic, not a branch on the data.
-      count += composite[i] ? 0 : 1;
+      count += composite[x] ? 0 : 1;
       if (count == n) {
-        return 2 * i + 1;
+        return value(x);
       }
     }
     throw new IllegalStateException("Sieve too small for n = " + n);
+  }
+
+  /** The number that slot {@code x} stands for. */
+  private static int value(int x) {
+    // Even x give 3x + 5 (6k + 5), odd x give 3x + 4 (6k + 1).
+    return 3 * x + 5 - (x & 1);
+  }
+
+  /** The slot of {@code v}, which must be coprime to 6 and at least 5. */
+  private static int index(int v) {
+    // Inverts value(): v / 3 rounds both 3x + 5 and 3x + 4 down to x + 1.
+    return v / 3 - 1;
   }
 
 }
