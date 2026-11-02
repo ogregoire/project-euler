@@ -15,8 +15,6 @@
  */
 package be.fror.projecteuler.problem;
 
-import be.fror.projecteuler.math.Primes;
-
 /**
  * <p>
  * The prime factors of 13195 are 5, 7, 13 and 29.</p>
@@ -28,9 +26,23 @@ import be.fror.projecteuler.math.Primes;
 public class Problem3 extends AbstractProblem {
 
   @Override
-  public Long solve() {
-    long[] factors = Primes.factorize(600851475143L);
-    return factors[factors.length - 1];
+  public Object solve() {
+    var n = 600851475143L;
+    if (n % 2 == 0) {
+      n >>= Long.numberOfTrailingZeros(n);
+      if (n == 1) {
+        return 2L;
+      }
+    }
+    var divisor = 3L;
+    while (divisor * divisor <= n) {
+      if (n % divisor == 0) {
+        n /= divisor;
+      } else {
+        divisor += 2;
+      }
+    }
+    return n;
   }
 
 }
