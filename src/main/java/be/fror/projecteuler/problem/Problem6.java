@@ -35,12 +35,15 @@ public class Problem6 extends AbstractProblem {
 
   @Override
   public Object solve() {
-    final int to = 100;
+    var n = 100;
 
-    int squareOfSum = to * (to + 1) / 2;
-    squareOfSum *= squareOfSum;
+    var sum = n * (n + 1) / 2;
+    var squareOfSum = sum * sum;
 
-    int sumOfSquares = to * (to + 1) * (2 * to + 1) / 6;
+    var sumOfSquares = 0;
+    for (var i = 1; i <= n; i++) {
+      sumOfSquares += i * i;
+    }
 
     return squareOfSum - sumOfSquares;
   }
