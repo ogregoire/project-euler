@@ -15,8 +15,6 @@
  */
 package be.fror.projecteuler.problem;
 
-import be.fror.projecteuler.math.Primes;
-
 /**
  * <p>
  * 2520 is the smallest number that can be divided by each of the numbers from 1 to 10 without any
@@ -35,15 +33,22 @@ public class Problem5 extends AbstractProblem {
   }
 
   long smallestMultiple(int max) {
-    long n = 1;
-    for (long p : Primes.basicSieve(max)) {
-      long m = p;
-      for (long x = p * p; x <= max; x *= p) {
-        m = x;
+    var composite = new boolean[max + 1];
+    var result = 1L;
+    for (var p = 2; p <= max; p++) {
+      if (composite[p]) {
+        continue;
       }
-      n *= m;
+      var power = p;
+      while (power * p <= max) {
+        power *= p;
+      }
+      result *= power;
+      for (var multiple = p * p; multiple <= max; multiple += p) {
+        composite[multiple] = true;
+      }
     }
-    return n;
+    return result;
   }
 
 }
