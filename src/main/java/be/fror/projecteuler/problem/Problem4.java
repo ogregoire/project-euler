@@ -15,8 +15,6 @@
  */
 package be.fror.projecteuler.problem;
 
-import be.fror.projecteuler.math.Tools;
-
 /**
  * <p>
  * A palindromic number reads the same both ways. The largest palindrome made from the product of
@@ -31,18 +29,23 @@ public class Problem4 extends AbstractProblem {
 
   @Override
   public Object solve() {
-    int greatestPalindromic = Integer.MIN_VALUE;
-    int stop = Integer.MIN_VALUE;
-    for (int i = 999, sqi = i * i; stop < i; i--, sqi -= (i + i - 1)) {
-      for (int product = i * 999; sqi <= product && greatestPalindromic < product; product -= i) {
-        if (Tools.isPalindromic(product)) {
-          greatestPalindromic = product;
-          stop = product / 999;
-          break;
+    for (var i = 0; i <= 8; i++) {
+      for (var j = 0; j <= 9; j++) {
+        for (var k = 0; k <= 9; k++) {
+          var p = 999999 - i * 100001 - j * 10010 - k * 1100;
+          var q = p / 11;
+          for (var d = 90; d >= 10; d--) {
+            if (q % d == 0) {
+              if (p / (11 * d) < 1000) {
+                return p;
+              }
+              break;
+            }
+          }
         }
       }
     }
-    return greatestPalindromic;
+    throw new IllegalStateException("No palindrome found");
   }
 
 }
