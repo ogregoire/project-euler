@@ -79,18 +79,14 @@ public class Problem7 extends AbstractProblem {
 
   /** The number that sieve index {@code x} stands for. */
   private static int value(int x) {
-    if (x % 2 == 0) {
-      return 6 * (x / 2) + 7;
-    }
-    return 6 * (x / 2) + 11;
+    // Even x give 3x + 7 (6k + 1), odd x give 3x + 8 (6k + 5).
+    return 3 * x + 7 + (x & 1);
   }
 
   /** The sieve index of {@code v}, which must be 6k + 1 or 6k + 5 and at least 7. */
   private static int index(int v) {
-    if (v % 6 == 1) {
-      return (v - 7) / 6 * 2;
-    }
-    return (v - 11) / 6 * 2 + 1;
+    // Inverts value(): v / 3 rounds 3x + 8 down to x + 2, like 3x + 7.
+    return v / 3 - 2;
   }
 
 }
