@@ -30,12 +30,13 @@ public class Problem2 extends AbstractProblem {
 
     @Override
     public Object solve() {
-        final int N = 4_000_000;
+        var limit = 4_000_000;
 
-        int sum = 0;
-
-        for (int a = 1, b = 2, tmp; b <= N; tmp = a + b, a = b, b = tmp) {
-            sum += b * (b & 1 ^ 1);
+        // Even terms sit at positions 3n+1, so each one is ef(n-3) * 4 + ef(n-6).
+        var sum = 0;
+        for (int previous = 2, current = 8, next; previous <= limit;
+                next = current * 4 + previous, previous = current, current = next) {
+            sum += previous;
         }
         return sum;
     }
