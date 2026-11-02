@@ -30,10 +30,13 @@ public class Problem4 extends AbstractProblem {
   @Override
   public Object solve() {
     for (var i = 9; i >= 1; i--) {
+      // An odd p, ending in i, has only odd factors.
+      var step = ((i & 1) + 1) * 11;
+      var start = 1001 - step;
       for (var j = 9; j >= 0; j--) {
         for (var k = 9; k >= 0; k--) {
           var p = i * 100001 + j * 10010 + k * 1100;
-          for (var a = 990; a >= 100; a -= 11) {
+          for (var a = start; a >= 100; a -= step) {
             var b = p / a;
             if (b >= 1000) {
               break;
