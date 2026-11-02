@@ -33,17 +33,19 @@ package be.fror.projecteuler.problem;
  */
 public class Problem6 extends AbstractProblem {
 
+  // Volatile, so the JIT reloads it on every call and can't fold or hoist the computation.
+  private volatile int n = 100;
+
   @Override
   public Object solve() {
-    var n = 100;
+    return sumSquareDifference(n);
+  }
 
-    var sum = n * (n + 1) / 2;
-    var squareOfSum = sum * sum;
+  private static int sumSquareDifference(int to) {
+    int squareOfSum = to * (to + 1) / 2;
+    squareOfSum *= squareOfSum;
 
-    var sumOfSquares = 0;
-    for (var i = 1; i <= n; i++) {
-      sumOfSquares += i * i;
-    }
+    int sumOfSquares = to * (to + 1) * (2 * to + 1) / 6;
 
     return squareOfSum - sumOfSquares;
   }

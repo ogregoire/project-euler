@@ -11,16 +11,18 @@ import be.fror.projecteuler.problem.AbstractProblem;
  */
 public class Problem1 extends AbstractProblem {
 
-  private static final int LIMIT = 1000;
+  // Volatile, so the JIT reloads it on every call and can't fold or hoist the computation.
+  private volatile int limit = 1000;
 
   @Override
   public Object solve() {
-    return sumOfMultiples(3) + sumOfMultiples(5) - sumOfMultiples(15);
+    var limit = this.limit;
+    return sumOfMultiples(3, limit) + sumOfMultiples(5, limit) - sumOfMultiples(15, limit);
   }
 
-  /** Sum of the positive multiples of {@code n} strictly below {@link #LIMIT}. */
-  private static int sumOfMultiples(int n) {
-    var count = (LIMIT - 1) / n;
+  /** Sum of the positive multiples of {@code n} strictly below {@code limit}. */
+  private static int sumOfMultiples(int n, int limit) {
+    var count = (limit - 1) / n;
     return n * count * (count + 1) / 2;
   }
 }

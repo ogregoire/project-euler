@@ -10,12 +10,14 @@ import be.fror.projecteuler.problem.AbstractProblem;
  */
 public class Problem6 extends AbstractProblem {
 
-  private static final int LIMIT = 100;
+  // Volatile, so the JIT reloads it on every call and can't fold or hoist the computation.
+  private volatile int limit = 100;
 
   @Override
   public Object solve() {
-    var sum = LIMIT * (LIMIT + 1) / 2;
-    var sumOfSquares = LIMIT * (LIMIT + 1) * (2 * LIMIT + 1) / 6;
+    var limit = this.limit;
+    var sum = limit * (limit + 1) / 2;
+    var sumOfSquares = limit * (limit + 1) * (2 * limit + 1) / 6;
     return sum * sum - sumOfSquares;
   }
 }

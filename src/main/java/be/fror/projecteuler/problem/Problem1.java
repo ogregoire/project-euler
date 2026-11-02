@@ -26,10 +26,20 @@ package be.fror.projecteuler.problem;
  */
 public class Problem1 extends AbstractProblem {
 
+    // Volatile, so the JIT reloads them on every call and can't fold or hoist the computation.
+    private volatile int a = 3;
+    private volatile int b = 5;
+    private volatile int limit = 1000;
+
     @Override
     public Object solve() {
-        var n = 1000 - 1;
-        return sumOfMultiples(3, n) + sumOfMultiples(5, n) - sumOfMultiples(15, n);
+        return sumOfMultiplesBelow(a, b, limit);
+    }
+
+    /** Sum of the multiples of {@code a} or {@code b} below {@code limit}; a and b must be coprime. */
+    private static int sumOfMultiplesBelow(int a, int b, int limit) {
+        var n = limit - 1;
+        return sumOfMultiples(a, n) + sumOfMultiples(b, n) - sumOfMultiples(a * b, n);
     }
 
     /** Sum of the positive multiples of {@code x} up to {@code n}, inclusive. */
