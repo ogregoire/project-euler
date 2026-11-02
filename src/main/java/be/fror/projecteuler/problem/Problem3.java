@@ -34,12 +34,23 @@ public class Problem3 extends AbstractProblem {
         return 2L;
       }
     }
-    var divisor = 3L;
+    if (n % 3 == 0) {
+      do {
+        n /= 3;
+      } while (n % 3 == 0);
+      if (n == 1) {
+        return 3L;
+      }
+    }
+    // From 5, alternating +2 and +4 skips every multiple of 2 and 3.
+    var divisor = 5L;
+    var step = 2L;
     while (divisor * divisor <= n) {
       if (n % divisor == 0) {
         n /= divisor;
       } else {
-        divisor += 2;
+        divisor += step;
+        step = 6 - step;
       }
     }
     return n;
