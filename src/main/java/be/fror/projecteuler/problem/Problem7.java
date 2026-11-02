@@ -26,8 +26,6 @@ package be.fror.projecteuler.problem;
  */
 public class Problem7 extends AbstractProblem {
 
-  private static final int[] FIRST_PRIMES = {2, 3, 5, 7, 11, 13};
-
   // Volatile, so the JIT reloads it on every call and can't fold or hoist the computation.
   private volatile int n = 10_001;
 
@@ -37,56 +35,40 @@ public class Problem7 extends AbstractProblem {
   }
 
   private static int nthPrime(int n) {
-    if (n <= 6) {
-      if (n < 1) {
-        throw new IllegalArgumentException("n must be at least 1, got " + n);
-      }
-      return FIRST_PRIMES[n - 1];
+    if (n < 1) {
+      throw new IllegalArgumentException("n must be at least 1, got " + n);
     }
-    // For n >= 6, the n-th prime is below n (ln n + ln ln n).
-    var max = (int) Math.ceil(n * (Math.log(n) + Math.log(Math.log(n))));
-    // The sieve only holds the numbers 6k + 1 and 6k + 5 from 7; 2, 3 and 5 are outside it.
-    var composite = new boolean[max / 3];
-    // 5 is outside the sieve, but its multiples 5 * q, q being 5 or a sieve value, are inside.
-    if (25 <= max) {
-      composite[index(25)] = true;
+    // 2 is the only even prime, and the sieve only holds odd numbers.
+    if (n == 1) {
+      return 2;
     }
-    for (var y = 0; 5 * value(y) <= max; y++) {
-      composite[index(5 * value(y))] = true;
-    }
-    var count = 3;
-    for (var x = 0; x < composite.length; x++) {
-      if (composite[x]) {
-        continue;
-      }
-      var p = value(x);
-      count++;
-      if (count == n) {
-        return p;
-      }
-      // Only multiples p * q with q in the sieve too can be in the sieve; q starts at p.
-      for (var y = x; ; y++) {
-        // long, because p * q overflows an int for p above 46340.
-        var multiple = (long) p * value(y);
-        if (multiple > max) {
-          break;
+    // For n >= 6, the n-th prime is below n (ln n + ln ln n); below that, 13 is the 6th prime.
+    var max = n <= 6 ? 13 : (int) Math.ceil(n * (Math.log(n) + Math.log(Math.log(n))));
+    // Slot i stands for the odd number 2i + 1, up to max included.
+    var size = (max - 1) / 2 + 1;
+    var composite = new boolean[size];
+    // Slot 0 stands for 1, which isn't prime, so the sieve starts at slot 1 (3).
+    // Only primes up to sqrt(max) mark anything, since the first multiple marked is p * p, at slot
+    // 2i(i + 1); long, because that overflows an int for i above 32767.
+    for (var i = 1; 2L * i * (i + 1) < size; i++) {
+      if (!composite[i]) {
+        var p = 2 * i + 1;
+        // Odd multiples of p are 2p apart, which is p slots.
+        for (var j = 2 * i * (i + 1); j < size; j += p) {
+          composite[j] = true;
         }
-        composite[index((int) multiple)] = true;
+      }
+    }
+    // Slot 0 is never marked, so it counts as the first prime, 2.
+    var count = 0;
+    for (var i = 0; i < size; i++) {
+      // A ternary instead of an if, so the JIT turns it into arithmetic, not a branch on the data.
+      count += composite[i] ? 0 : 1;
+      if (count == n) {
+        return 2 * i + 1;
       }
     }
     throw new IllegalStateException("Sieve too small for n = " + n);
-  }
-
-  /** The number that sieve index {@code x} stands for. */
-  private static int value(int x) {
-    // Even x give 3x + 7 (6k + 1), odd x give 3x + 8 (6k + 5).
-    return 3 * x + 7 + (x & 1);
-  }
-
-  /** The sieve index of {@code v}, which must be 6k + 1 or 6k + 5 and at least 7. */
-  private static int index(int v) {
-    // Inverts value(): v / 3 rounds 3x + 8 down to x + 2, like 3x + 7.
-    return v / 3 - 2;
   }
 
 }
