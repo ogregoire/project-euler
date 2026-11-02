@@ -87,27 +87,28 @@ public class Problem8 extends AbstractProblem {
     var max = 0L;
     // The start behaves like a zero just before the first digit.
     var zero = -1;
-    // Each pass starts right after a zero and ends at the next one, or at the end of the number.
     while (zero + window < number.length()) {
       // The first full window after the zero ends at zero + window. Reading it backwards finds
       // the last zero in it first, and skips every digit before that zero.
       var end = zero + window;
       // long, because 9^13 overflows an int.
       var product = 1L;
-      // The number of digits since the last zero.
-      var count = 0;
+      var found = -1;
       for (var i = end; i > zero; i--) {
         var digit = number.charAt(i) - '0';
         if (digit == 0) {
+          found = i;
           break;
         }
         product *= digit;
-        count++;
       }
-      if (count == window && product > max) {
-        max = product;
+      // A zero in the window: the next full window starts after it, so scan back again from there.
+      if (found >= 0) {
+        zero = found;
+        continue;
       }
-      // Resume rightwards from the end of that window.
+      // A full window: slide rightwards until the next zero.
+      max = Math.max(max, product);
       zero = number.length();
       for (var i = end + 1; i < number.length(); i++) {
         var digit = number.charAt(i) - '0';
@@ -115,15 +116,8 @@ public class Problem8 extends AbstractProblem {
           zero = i;
           break;
         }
-        count++;
-        product *= digit;
-        // The digit leaving the window is nonzero, since there's no zero in the last count digits.
-        if (count > window) {
-          product /= number.charAt(i - window) - '0';
-        }
-        if (count >= window && product > max) {
-          max = product;
-        }
+        product = product / (number.charAt(i - window) - '0') * digit;
+        max = Math.max(max, product);
       }
     }
     return max;
