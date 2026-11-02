@@ -28,13 +28,14 @@ public class Problem1 extends AbstractProblem {
 
     @Override
     public Object solve() {
-        int MAX = 999;
-        return sumOfMultiples(3, MAX) + sumOfMultiples(5, MAX) - sumOfMultiples(3 * 5, MAX);
+        var n = 1000 - 1;
+        return sumOfMultiples(3, n) + sumOfMultiples(5, n) - sumOfMultiples(15, n);
     }
 
-    private int sumOfMultiples(int n, int max) {
-        int nMax = max / n;
-        return nMax * (nMax + 1) / 2 * n;
+    /** Sum of the positive multiples of {@code x} up to {@code n}, inclusive. */
+    private static int sumOfMultiples(int x, int n) {
+        var i = n / x;
+        return i * (i + 1) / 2 * x;
     }
 
 }
