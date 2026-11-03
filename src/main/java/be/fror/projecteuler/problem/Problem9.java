@@ -31,41 +31,34 @@ package be.fror.projecteuler.problem;
  */
 public class Problem9 extends AbstractProblem {
 
+  // Volatile, so the JIT reloads it on every call and can't fold or hoist the computation.
+  private volatile int sum = 1000;
+
   @Override
   public Object solve() {
-    return primitive(1000);
+    return tripletProduct(sum);
   }
 
-  private int fastNaive(final int targetSum) {
-    double sqrt2 = Math.sqrt(2);
-    for (int c = (int) (targetSum * sqrt2 / (2 + sqrt2)), C = targetSum / 2 + 1; c < C; c++) {
-      for (int a = Math.max(1, targetSum - c - c +   1),
-          A = Math.min(targetSum / 3, (targetSum - c) / 2);
-          a < A;
-          a++) {
-        int b = targetSum - c - a;
-        if (a * a + b * b == c * c) {
-          return a * b * c;
-        }
+  private static long tripletProduct(int n) {
+    // 3 + 4 + 5 is the smallest sum of a Pythagorean triplet.
+    if (n < 12) {
+      throw new IllegalArgumentException("n must be at least 12, got " + n);
+    }
+    // b = (n - c + sqrt(c^2 + 2nc - n^2)) / 2, from a + b = n - c and a^2 + b^2 = c^2. The root is
+    // real from c = (sqrt(2) - 1) n; and a + b > c, so c < n / 2.
+    for (var c = (int) Math.ceil((Math.sqrt(2) - 1) * n); 2 * c < n; c++) {
+      // long, because c^2 + 2nc overflows an int for sums above about 41000.
+      var x = (long) c * c + 2L * n * c - (long) n * n;
+      var r = (long) Math.sqrt(x);
+      // x has the parity of n - c, so a square root r always makes n - c + r even.
+      if (r * r == x) {
+        var b = (n - c + r) / 2;
+        var a = n - c - b;
+        // long, because a * b * c overflows an int for sums above about 3900.
+        return a * b * c;
       }
     }
-    throw new AssertionError();
+    throw new IllegalStateException("No Pythagorean triplet sums to " + n);
   }
 
-  private int primitive(int targetSum) {
-    int a, b, c;
-    int x = 3;
-    do {
-      a = x++;
-      if ((a & 1) != 0) {
-        b = a * a / 2;
-        c = b + 1;
-      } else {
-        b = a * a / 4 - 1;
-        c = b + 2;
-      }
-    } while (targetSum % (a + b + c) != 0);
-    int k = targetSum / (a + b + c);
-    return a * b * c * k * k * k;
-  }
 }
