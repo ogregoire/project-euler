@@ -12,23 +12,38 @@ import be.fror.projecteuler.problem.AbstractProblem;
  */
 public class Problem9 extends AbstractProblem {
 
-  private static final int PERIMETER = 1000;
+  // Volatile, so the JIT reloads it on every call and can't fold or hoist the computation.
+  private volatile int perimeter = 1000;
 
   @Override
   public Object solve() {
-    var half = PERIMETER / 2;
+    return tripletProduct(perimeter);
+  }
+
+  private static long tripletProduct(int perimeter) {
+    // 3 + 4 + 5 is the smallest perimeter of a Pythagorean triplet.
+    if (perimeter < 12) {
+      throw new IllegalArgumentException("perimeter must be at least 12, got " + perimeter);
+    }
+    // Every triplet is k (m^2 - n^2, 2mn, m^2 + n^2) with m > n >= 1, so its perimeter is
+    // 2k m (m + n): always even.
+    if (perimeter % 2 != 0) {
+      throw new IllegalStateException("No Pythagorean triplet has perimeter " + perimeter);
+    }
+    var half = perimeter / 2;
     for (var m = 2; m * m < half; m++) {
       for (var n = 1; n < m; n++) {
         var primitiveHalfPerimeter = m * (m + n);
         if (half % primitiveHalfPerimeter == 0) {
           var k = half / primitiveHalfPerimeter;
-          var a = (m * m - n * n) * k;
-          var b = 2 * m * n * k;
-          var c = (m * m + n * n) * k;
+          // long, because a * b * c overflows an int for perimeters above about 3900.
+          var a = (long) (m * m - n * n) * k;
+          var b = 2L * m * n * k;
+          var c = (long) (m * m + n * n) * k;
           return a * b * c;
         }
       }
     }
-    throw new AssertionError("No Pythagorean triplet has perimeter " + PERIMETER);
+    throw new IllegalStateException("No Pythagorean triplet has perimeter " + perimeter);
   }
 }
