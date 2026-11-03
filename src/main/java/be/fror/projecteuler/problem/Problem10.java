@@ -31,9 +31,6 @@ public class Problem10 extends AbstractProblem {
   private static final int[] SMALL_PRIMES = {2, 3, 5, 7, 11, 13};
   // Slots per period of the marks of 5, 7, 11 and 13: 2 * 5 * 7 * 11 * 13.
   private static final int PERIOD = 10_010;
-  // Slots per int block of the sum. Values stay below limit, so a block sums to less than
-  // BLOCK * limit, which fits in an int for limit up to 2^31 / BLOCK.
-  private static final int BLOCK = 1024;
 
   @Override
   public Object solve() {
@@ -99,9 +96,13 @@ public class Problem10 extends AbstractProblem {
     }
     // long, because the sum overflows an int.
     var sum = 2L + 3;
-    // Each block sums in an int, which can't overflow (see BLOCK), and adds to the long once.
-    for (var block = 0; block < size; block += BLOCK) {
-      var end = Math.min(block + BLOCK, size);
+    // Each block sums in an int and adds to the long once. Every value is at most top, so a block
+    // of up to Integer.MAX_VALUE / top slots can't overflow an int. Rounded down to a power of 2,
+    // so that if the JIT ever vectorizes the loop, each block is a multiple of the vector width
+    // and needs no scalar tail.
+    var blockSize = Integer.highestOneBit(Integer.MAX_VALUE / top);
+    for (var block = 0; block < size; block += blockSize) {
+      var end = Math.min(block + blockSize, size);
       var blockSum = 0;
       for (var x = block; x < end; x++) {
         // A mask instead of a branch: composite[x] is 0 or 1, so composite[x] - 1 is the int -1
