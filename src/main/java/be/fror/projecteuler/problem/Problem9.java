@@ -39,26 +39,32 @@ public class Problem9 extends AbstractProblem {
     return tripletProduct(sum);
   }
 
-  private static long tripletProduct(int n) {
+  private static long tripletProduct(int sum) {
     // 3 + 4 + 5 is the smallest sum of a Pythagorean triplet.
-    if (n < 12) {
-      throw new IllegalArgumentException("n must be at least 12, got " + n);
+    if (sum < 12) {
+      throw new IllegalArgumentException("sum must be at least 12, got " + sum);
     }
-    // b = (n - c + sqrt(c^2 + 2nc - n^2)) / 2, from a + b = n - c and a^2 + b^2 = c^2. The root is
-    // real from c = (sqrt(2) - 1) n; and a + b > c, so c < n / 2.
-    for (var c = (int) Math.ceil((Math.sqrt(2) - 1) * n); 2 * c < n; c++) {
-      // long, because c^2 + 2nc overflows an int for sums above about 41000.
-      var x = (long) c * c + 2L * n * c - (long) n * n;
-      var r = (long) Math.sqrt(x);
-      // x has the parity of n - c, so a square root r always makes n - c + r even.
-      if (r * r == x) {
-        var b = (n - c + r) / 2;
-        var a = n - c - b;
-        // long, because a * b * c overflows an int for sums above about 3900.
-        return a * b * c;
+    // Every triplet is k (m^2 - n^2, 2mn, m^2 + n^2) with m > n >= 1 (Euclid's formula), so its
+    // sum is 2k m (m + n): always even.
+    if (sum % 2 != 0) {
+      throw new IllegalStateException("No Pythagorean triplet sums to " + sum);
+    }
+    var half = sum / 2;
+    // m (m + n) divides half, and n >= 1, so m^2 < half.
+    for (var m = 2; m * m < half; m++) {
+      for (var n = 1; n < m; n++) {
+        var primitiveHalfSum = m * (m + n);
+        if (half % primitiveHalfSum == 0) {
+          var k = half / primitiveHalfSum;
+          // long, because a * b * c overflows an int for sums above about 3900.
+          var a = (long) (m * m - n * n) * k;
+          var b = 2L * m * n * k;
+          var c = (long) (m * m + n * n) * k;
+          return a * b * c;
+        }
       }
     }
-    throw new IllegalStateException("No Pythagorean triplet sums to " + n);
+    throw new IllegalStateException("No Pythagorean triplet sums to " + sum);
   }
 
 }
